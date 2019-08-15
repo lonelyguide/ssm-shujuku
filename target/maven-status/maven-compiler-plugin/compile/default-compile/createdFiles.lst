@@ -1,0 +1,5 @@
+com\service\IUserService.class
+com\controller\UserController.class
+com\bean\userinfo.class
+com\service\impl\UserServiceImpl.class
+com\dao\IUserDao.class
