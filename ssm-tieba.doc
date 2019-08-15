@@ -1,0 +1,448 @@
+
+        <html xmlns:v="urn:schemas-microsoft-com:vml"
+        xmlns:o="urn:schemas-microsoft-com:office:office"
+        xmlns:w="urn:schemas-microsoft-com:office:word"
+        xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta http-equiv=Content-Type content="text/html;  
+        charset=utf-8">
+        <style type="text/css">
+            table  
+            {  
+                border-collapse: collapse;
+                border: none;  
+                width: 100%;  
+            }  
+            td  
+            {  
+                border: solid #CCC 1px;  
+            }  
+            .codestyle{
+                word-break: break-all;
+                background:silver;mso-highlight:silver;
+            }
+        </style>
+        <meta name=ProgId content=Word.Document>
+        <meta name=Generator content="Microsoft Word 11">
+        <meta name=Originator content="Microsoft Word 11">
+        <xml><w:WordDocument><w:View>Print</w:View></xml></head>
+        <body><h1>1、项目-贴吧管理</h1><div style="margin-left:20px;"><h2>1.1、前端</h2><div style="margin-left:20px;"><h3>1.1.1、前端页面</h3><div style="margin-left:30px;"><h3>前端包含四个页面</h3>
+<ol>
+<li><strong>index.jsp：</strong>首页，可以点击链接跳转显示所有用户
+<pre><code class="language-html"><a href="${pageContext.request.contextPath}/user/findAll.do">查询所有用户</a></code></pre></table></li>
+<li><strong>allUser.jsp：</strong>显示用户页面，具体显示运用<c:forEach />标签，与mvc模型结合，引入前端bootstrap框架
+<pre><code class="language-html">           <tbody>
+            <c:forEach items="${ui}" var="userinfo">
+                <tr>
+                    <td>${userinfo.id}</td>
+                    <td>${userinfo.username}</td>
+                    <td>${userinfo.password}</td>
+                    <td>
+                        <a href="${pageContext.request.contextPath}/user/toUpdate.do?id=${userinfo.id}">更改</a> |
+                        <a href="${pageContext.request.contextPath}/user/delete.do?id=${userinfo.id}">删除</a>
+                    </td>
+                </tr>
+            </c:forEach>
+            </tbody></code></pre></table></li>
+<li><strong>addUser.jsp：</strong>新增用户界面，通过表单提交，路径采用绝对路径${pageContext.request.contextPath}/...
+<pre><code class="language-html"><form action="${pageContext.request.contextPath}/user/save.do" method="post">
+    用&nbsp;&nbsp;户&nbsp;&nbsp;
+    id：<input type="text" name="id"><br><br><br>
+    用户姓名：<input type="text" name="username"><br><br><br>
+    用户密码：<input type="text" name="password"><br><br><br>
+    <input type="submit" value="添加"  >
+</form></code></pre></table></li>
+<li><strong>updateUser.jsp：</strong>更新用户界面，利用mvc模型对象对指定用户进行更新
+<pre><code class="language-html"><form action="${pageContext.request.contextPath}/user/update.do"
+      method="post">
+    <input type="hidden" name="id" value="${userInfo.id}"/>
+    用户姓名：<input type="text" name="username" value="${userInfo.username}"/>
+    用户密码：<input type="text" name="password" value="${userInfo.password}"/>
+    <input type="submit" value="提交" />
+</form></code></pre></table></li>
+</ol></div><h3>1.1.2、spring-mvc</h3><div style="margin-left:30px;"><h4>spring-mvc配置</h4>
+<ol>
+<li>首先在beans前置xml里添加所需要的xml链接
+<pre><code class="language-xml">xmlns:context="http://www.springframework.org/schema/context"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans</code></pre></table></li>
+<li>
+<p>注解扫描位置，并配置mapper容器和适配器</p>
+<pre><code class="language-xml"><context:component-scan base-package="com.controller"/>
+
+<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>
+<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter"/></code></pre></table>
+</li>
+<li>视图解析，将do后缀改为jsp后缀
+前缀prefix设置前缀路径
+后缀suffix设置文件属性为.jsp文件
+<pre><code class="language-xml"><!--视图的解析器-->
+<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    <property name="prefix" value="/jsp/"/>
+    <property name="suffix" value=".jsp"/>
+</bean></code></pre></table></li>
+</ol></div><h3>1.1.3、web.xml</h3><div style="margin-left:30px;"><p>配置web前端设置</p>
+<ol>
+<li>配置数据库类加载
+<pre><code class="language-xml"><!-- 配置加载类路径的配置文件 -->
+<context-param>
+<param-name>contextConfigLocation</param-name>
+<param-value>classpath*:applicationContext.xml</param-value>
+</context-param></code></pre></table></li>
+<li>配置监听器
+<pre><code class="language-xml"><listener>
+<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+</listener>
+<listener>
+<listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
+</listener></code></pre></table></li>
+<li>前端servlet-->spring-mvc
+<pre><code class="language-xml"><servlet>
+<servlet-name>dispatcherServlet</servlet-name>
+<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+</servlet></code></pre></table>
+<pre><code class="language-xml"><!-- 配置初始化参数，创建完DispatcherServlet对象，加载springmvc.xml配置文件 -->
+<init-param>
+  <param-name>contextConfigLocation</param-name>
+  <param-value>classpath:spring-mvc.xml</param-value>
+</init-param></code></pre></table>
+<pre><code class="language-xml"><!-- 服务器启动的时候，让DispatcherServlet对象创建 -->
+<load-on-startup>1</load-on-startup></code></pre></table></li>
+<li>服务器请求的关于.do的规则都会被dispatcherServlet响应
+<pre><code class="language-xml"><servlet-mapping>
+<servlet-name>dispatcherServlet</servlet-name>
+<url-pattern>*.do</url-pattern>
+</servlet-mapping></code></pre></table></li>
+</ol></div></div><h2>1.2、后端</h2><div style="margin-left:20px;"><h3>1.2.1、后台配置</h3><div style="margin-left:30px;"><p>后台代码主要由两部分组成</p>
+<ol>
+<li>
+<p>bean，service，controller</p>
+<ol>
+<li><strong>bean：</strong>主要负责java对象的建立，包含属性（id，name...）,并创建构造函数。简单来说就是一个标准的java类
+<pre><code class="language-java">public class userinfo {
+private  int id;
+private  String username;
+private  String password;
+/**GETTER AND SETTER **/
+}</code></pre></table></li>
+<li><strong>service：</strong>包含一个“I...service”接口和一个“...impl”实现类。
+接口里主要是定义对数据的操作方法，基本和dao类里的方法一致。
+实现类里则是对接口方法的具体实现，并借用dao类实现对数据库的操作
+<pre><code class="language-java">public interface IUserService {
+List<userinfo>findAll();
+int addUser(userinfo a);
+int delete(long id);
+int updateuser(userinfo a);
+userinfo userB(long id);
+}</code></pre></table>
+<pre><code class="language-java">@Service
+public class UserServiceImpl implements IUserService {
+@Autowired
+IUserDao userdao;
+@Override
+public List<userinfo> findAll() {
+return userdao.findAll();
+}
+...
+}</code></pre></table></li>
+<li><strong>controller：</strong>控制器类，包含一个service对象，在映射函数上调用service里的方法，返回mvc模型进行业务寻址（即找到findAll.do文件）
+使用requestmapping注解设置指定请求与处理方法之间的映射关系，即要进行的操作搭配什么处理方法
+<pre><code class="language-java">
+@Controller
+@RequestMapping("user")
+public class UserController {
+@Autowired
+private IUserService userService;</code></pre></table></li>
+</ol>
+<p>@RequestMapping("/findAll.do")
+public ModelAndView findAll(){
+List<userinfo>userinfos=userService.findAll();
+ModelAndView mv =new ModelAndView();
+mv.addObject("ui",userinfos);
+mv.setViewName("allUser");
+return  mv;
+}
+...
+}</p>
+<table width='100%' class='codestyle'><pre><code></code></pre></table>
+</li>
+<li>dao，mapper
+<ol>
+<li><strong>dao：</strong>（data access object）一个用来跟数据库处理交换的接口，里面包含了可能需要的方法，如find，update，delete等等，与mapper类结合，将mapper里的数据库语句提取到方法里.
+<pre><code class="language-java">public interface IUserDao {
+public List<userinfo> findAll();
+public int addUser(userinfo user);
+public  int updateUser(userinfo user);
+userinfo userB(long id);
+int delete(long id);
+}</code></pre></table></li>
+<li><strong>mapper：</strong>包含数据库处理语句的文件，利用mapper的namespace与dao接口映射，实现对数据库的操作语句访问
+<pre><code class="language-xml"><mapper namespace="com.dao.IUserDao" >
+<select id="findAll" resultType="com.bean.userinfo">
+select  * from userinfo
+</select>
+...
+</mapper></code></pre></table></li>
+</ol></li>
+</ol></div><h3>1.2.2、maven</h3><div style="margin-left:30px;"><p>maven pom.xml</p>
+<pre><code class="language-xml"><?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>cymj</groupId>
+    <artifactId>accessDemo</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <!-- spring版本号 -->
+        <spring.version>5.0.2.RELEASE</spring.version>
+        <!-- mybatis版本号 -->
+        <mybatis.version>3.2.6</mybatis.version>
+        <!-- log4j日志文件管理包版本 -->
+        <slf4j.version>1.7.7</slf4j.version>
+        <log4j.version>1.2.17</log4j.version>
+        <c3p0.version>0.9.5.2</c3p0.version>
+        <taglibs.version>1.1.2</taglibs.version>
+    </properties>
+
+    <dependencies>
+        <!-- spring核心包 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-oxm</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aop</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <!-- mybatis核心包 -->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>${mybatis.version}</version>
+        </dependency>
+        <!-- mybatis/spring包 -->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-spring</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+        <!-- 导入java ee jar 包 -->
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-api</artifactId>
+            <version>7.0</version>
+        </dependency>
+
+        <!-- 导入Mysql数据库链接jar包 -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.30</version>
+        </dependency>
+        <!-- 导入dbcp的jar包，用来在applicationContext.xml中配置数据库 -->
+        <dependency>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+        <!-- JSTL标签类 -->
+        <dependency>
+            <groupId>jstl</groupId>
+            <artifactId>jstl</artifactId>
+            <version>1.2</version>
+        </dependency>
+        <!-- 日志文件管理包 -->
+        <!-- log start -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+
+        <!-- 数据连接池 -->
+        <dependency>
+            <groupId>com.mchange</groupId>
+            <artifactId>c3p0</artifactId>
+            <version>${c3p0.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>taglibs</groupId>
+            <artifactId>standard</artifactId>
+            <version>${taglibs.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- 导入servlet-api/jsp -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/javax.servlet.jsp/javax.servlet.jsp-api -->
+        <dependency>
+            <groupId>javax.servlet.jsp</groupId>
+            <artifactId>javax.servlet.jsp-api</artifactId>
+            <version>2.3.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <finalName>cymj</finalName>
+        <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
+            <plugins>
+                <plugin>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>3.1.0</version>
+                </plugin>
+                <!-- see http://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_war_packaging -->
+                <plugin>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.0.2</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.8.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.22.1</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>3.2.2</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>2.5.2</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.8.2</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>
+</code></pre></table></div></div><h2>1.3、数据库</h2><div style="margin-left:20px;"><h3>1.3.1、数据库(application.xml)</h3><div style="margin-left:30px;"><p><strong>数据库基本信息：</strong></p>
+<ul>
+<li>采用轻量级的mysql数据库，</li>
+<li>连接池采用c3p0连接池，</li>
+<li>采用mybatis进行数据库管理。</li>
+</ul>
+<p><strong>数据库基本配置：</strong></p>
+<ol>
+<li>
+<p>将数据库需要的基本信息保存在db.properties文件中</p>
+<table width='100%' class='codestyle'><pre><code>jdbc.driver=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/mybatis?serverTimezone=UTC&characterEncoding=UTF-8
+jdbc.username=root
+jdbc,password=mysql</code></pre></table>
+</li>
+<li>通过spring3提供的方法<context:property-placeholder location="" />来导入数据库信息。
+采用c3p0进行数据库管理，最小连接次数2，最大连接次数30
+<table width='100%' class='codestyle'><pre><code><bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+    <property name="driverClass" value="${jdbc.driver}"/>
+    <property name="jdbcUrl" value="${jdbc.url}"/>
+    <property name="user" value="${jdbc.username}"/>
+    <property name="password" value="${jdbc,password}"/>
+    <property name="maxPoolSize" value="30"/>
+    <property name="minPoolSize" value="2"/>
+</bean></code></pre></table></li>
+<li>
+<p>加载mapper文件</p>
+<table width='100%' class='codestyle'><pre><code><bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+
+    <property name="dataSource" ref="dataSource"/>
+
+    <property name="typeAliasesPackage" value="com.bean"></property>
+
+    <property name="mapperLocations" value="classpath:mapper/*.xml"/>
+
+</bean></code></pre></table>
+</li>
+<li>自动注入dao类
+<table width='100%' class='codestyle'><pre><code><!-- 4.配置扫描Dao接口包，动态实现Dao接口，注入到spring容器中 -->
+<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+    <!-- 给出需要扫描Dao接口包 -->
+    <property name="basePackage" value="com.dao"/>
+    <!-- 注入sqlSessionFactory -->
+    <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+</bean></code></pre></table></li>
+<li>自动扫描包
+`
+<context:component-scan base-package="com"/>
+<p>`</p></li>
+<li>配置数据库事务管理器
+`
+<tx:annotation-driven></tx:annotation-driven>
+`</li>
+</ol></div><h3>1.3.2、log4j</h3><div style="margin-left:30px;"><p>log日志配置</p>
+<pre><code class="language-xml"># Global logging configuration
+log4j.rootLogger=DEBUG, stdout
+# Console output...
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%5p [%t] - %m%n</code></pre></table></div></div><h2>1.4、代码</h2><div style="margin-left:20px;"></div><h2>1.5、帮助文档</h2><div style="margin-left:20px;"><h3>1.5.1、ReadMe</h3><div style="margin-left:30px;"><p>本次项目来源于网上的开源项目，具体网址如下：<a href="https://blog.csdn.net/weixin_43843824/article/details/94133957">https://blog.csdn.net/weixin_43843824/article/details/94133957</a>
+版权声明：本文为博主原创文章，遵循 CC 4.0 by-sa 版权协议，转载请附上原文出处链接和本声明。
+如果有不清楚地可以去原博客了解。</p></div></div></div></body></html>
